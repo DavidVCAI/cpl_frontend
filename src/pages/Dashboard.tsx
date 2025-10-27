@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { MapPin, Calendar, Trophy, User, LogOut, Plus } from 'lucide-react';
 import EventsList from '../components/events/EventsList';
 import CreateEventModal from '../components/events/CreateEventModal';
+import MapView from '@/components/maps/MapView';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -142,18 +143,16 @@ export default function Dashboard() {
             </div>
           )}
 
+
           {activeTab === 'map' && (
-            <div className="p-6">
-              <div className="bg-gray-700/30 rounded-lg border-2 border-dashed border-gray-600 h-[600px] flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-400 mb-2">Mapa Interactivo</h3>
-                  <p className="text-gray-500">Vista del mapa con Mapbox (En desarrollo)</p>
-                  <p className="text-sm text-gray-600 mt-2">Mostrará eventos cercanos en tiempo real</p>
-                </div>
+            <div className="p-6 h-[600px]">
+              <div className="bg-gray-700/30 rounded-lg overflow-hidden h-full border border-gray-600">
+                <MapView />
               </div>
             </div>
           )}
+
+
 
           {activeTab === 'collectibles' && (
             <div className="p-6">
