@@ -29,17 +29,8 @@ export default function EventDetail() {
     }
   }, [eventId]);
 
-  // Separate effect for polling when in video room
-  useEffect(() => {
-    if (!inVideoRoom || !eventId) return;
-
-    // Poll for updates every 5 seconds when in video room
-    const interval = setInterval(() => {
-      loadEvent();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [inVideoRoom, eventId]);
+  // DO NOT poll when in video room - it causes VideoRoom to unmount/remount
+  // Updates will come via WebSocket instead
 
   // Calculate live duration for active events
   useEffect(() => {
