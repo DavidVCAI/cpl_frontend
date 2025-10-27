@@ -14,7 +14,7 @@ interface ParticipantsMapProps {
 }
 
 export default function ParticipantsMap({ event }: ParticipantsMapProps) {
-  const { locations } = useWebSocket();
+  const { locations, isConnected } = useWebSocket();
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script", // Use same ID as MapView to avoid loader conflict
@@ -25,7 +25,13 @@ export default function ParticipantsMap({ event }: ParticipantsMapProps) {
   const participantLocations = useMemo(() => {
     const participantIds = event.participants.map(p => p.user_id);
     const locationsArray = Array.from(locations.values());
-    return locationsArray.filter(loc => participantIds.includes(loc.user_id));
+    const filtered = locationsArray.filter(loc => participantIds.includes(loc.user_id));
+
+    console.log('ParticipantsMap - Event participants:', participantIds);
+    console.log('ParticipantsMap - All locations:', locationsArray.map(l => l.user_id));
+    console.log('ParticipantsMap - Filtered locations:', filtered);
+
+    return filtered;
   }, [locations, event.participants]);
 
   // Calculate map center from participant locations or use event location
@@ -57,10 +63,18 @@ export default function ParticipantsMap({ event }: ParticipantsMapProps) {
 
   return (
     <div className="relative w-full h-full">
-      {/* Status indicator */}
-      <div className="absolute top-2 left-2 z-10">
+      {/* Status indicators */}
+      <div className="absolute top-2 left-2 z-10 space-y-2">
+        <div className={`px-3 py-1.5 rounded-lg shadow-lg text-xs font-medium ${
+          isConnected ? 'bg-green-600' : 'bg-red-600'
+        } text-white`}>
+          {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
+        </div>
         <div className="px-3 py-1.5 rounded-lg shadow-lg text-xs font-medium bg-indigo-600 text-white">
-          👥 {participantLocations.length} participante{participantLocations.length !== 1 ? 's' : ''} en el mapa
+          👥 {participantLocations.length} ubicación{participantLocations.length !== 1 ? 'es' : ''}
+        </div>
+        <div className="px-3 py-1.5 rounded-lg shadow-lg text-xs font-medium bg-purple-600 text-white">
+          📝 {event.participants.length} participante{event.participants.length !== 1 ? 's' : ''}
         </div>
       </div>
 

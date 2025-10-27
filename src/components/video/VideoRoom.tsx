@@ -53,11 +53,18 @@ export default function VideoRoom({ roomUrl, token, userName, event, onLeave }: 
     joinCall();
 
     // Event listeners
-    callFrame.current.on('participant-joined', () => {
+    callFrame.current.on('participant-joined', (event: any) => {
+      console.log('Participant joined:', event);
       updateParticipantCount();
     });
 
-    callFrame.current.on('participant-left', () => {
+    callFrame.current.on('participant-left', (event: any) => {
+      console.log('Participant left:', event);
+      updateParticipantCount();
+    });
+
+    callFrame.current.on('joined-meeting', (event: any) => {
+      console.log('Joined meeting:', event);
       updateParticipantCount();
     });
 
@@ -73,7 +80,9 @@ export default function VideoRoom({ roomUrl, token, userName, event, onLeave }: 
   const updateParticipantCount = () => {
     if (callFrame.current) {
       const participants = callFrame.current.participants();
-      setParticipantCount(Object.keys(participants).length);
+      const count = Object.keys(participants).length;
+      console.log('Participant count updated:', count, participants);
+      setParticipantCount(count);
     }
   };
 
