@@ -4,7 +4,7 @@ import type { Event, EventCreateData } from '../types';
 export const eventsService = {
   // Create a new event
   createEvent: async (data: EventCreateData, creatorId: string): Promise<any> => {
-    const response = await api.post(`/api/events?creator_id=${creatorId}`, data);
+    const response = await api.post('/api/events', { ...data, creator_id: creatorId });
     return response.data;
   },
 
