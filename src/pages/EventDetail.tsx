@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { eventsService } from '../services/events';
 import type { Event } from '../types';
 import { ArrowLeft, Calendar, MapPin, Users, Video, Loader2, Trophy } from 'lucide-react';
@@ -13,6 +14,7 @@ export default function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { sendMessage } = useWebSocket();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -23,8 +25,17 @@ export default function EventDetail() {
   useEffect(() => {
     if (eventId) {
       loadEvent();
+
+      // Poll for updates every 5 seconds when in video room
+      const interval = setInterval(() => {
+        if (inVideoRoom) {
+          loadEvent();
+        }
+      }, 5000);
+
+      return () => clearInterval(interval);
     }
-  }, [eventId]);
+  }, [eventId, inVideoRoom]);
 
   // Calculate live duration for active events
   useEffect(() => {
@@ -81,6 +92,15 @@ export default function EventDetail() {
       // Set video room state
       setRoomToken(response.token);
       setInVideoRoom(true);
+
+      // Notify via WebSocket that user joined event
+      sendMessage({
+        type: 'join_event',
+        event_id: event.id
+      });
+
+      // Reload event to get updated participants
+      await loadEvent();
 
     } catch (error: any) {
       toast.error(error.message || 'Error al unirse al evento');
