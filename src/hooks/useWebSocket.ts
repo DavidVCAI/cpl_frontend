@@ -179,10 +179,13 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, [sendMessage]);
 
   useEffect(() => {
-    connect();
+    // Only connect if we have a user ID and NOT already connected
+    if (user?.id && !wsRef.current) {
+      connect();
+    }
 
     return () => {
-      // Cleanup on unmount
+      // Cleanup ONLY on unmount (when user?.id changes or component unmounts)
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -191,7 +194,10 @@ export const useWebSocket = (): UseWebSocketReturn => {
         wsRef.current = null;
       }
     };
-  }, [connect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // IMPORTANT: Only depend on user?.id to prevent reconnection loops
+    // connect() is stable because its dependencies (callbacks) have no deps
+  }, [user?.id]);
 
   return {
     sendMessage,

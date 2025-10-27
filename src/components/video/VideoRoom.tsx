@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import DailyIframe from '@daily-co/daily-js';
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, Map, FileText } from 'lucide-react';
-import ParticipantsMap from '../maps/ParticipantsMap';
-import LiveTranscription from '../transcription/LiveTranscription';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText } from 'lucide-react';
 import type { Event } from '../../types';
+import LiveTranscription from '../transcription/LiveTranscription';
 
 interface VideoRoomProps {
   roomUrl: string;
@@ -20,7 +19,6 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(false);  // Temporarily disabled
   const [showTranscription, setShowTranscription] = useState(false);
 
   useEffect(() => {
@@ -134,44 +132,23 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
-      {/* Video, Map, and Transcription Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-        {/* Video Container */}
-        <div className={`${(showMap || showTranscription) ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+      {/* Video Container with optional transcription panel */}
+      <div className="p-4">
+        <div className={`grid gap-4 ${showTranscription ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {/* Video */}
           <div
             ref={containerRef}
             className="relative bg-gray-900 rounded-lg"
-            style={{ height: '600px' }}
+            style={{ height: '600px', width: '100%' }}
           />
+
+          {/* Transcription Panel */}
+          {showTranscription && (
+            <div style={{ height: '600px' }}>
+              <LiveTranscription isActive={showTranscription} />
+            </div>
+          )}
         </div>
-
-        {/* Right Panel: Map or Transcription */}
-        {(showMap || showTranscription) && (
-          <div className="lg:col-span-1" style={{ height: '600px' }}>
-            {showMap && !showTranscription && (
-              <div className="bg-gray-900 rounded-lg overflow-hidden h-full">
-                <ParticipantsMap event={event} />
-              </div>
-            )}
-
-            {showTranscription && !showMap && (
-              <div className="h-full">
-                <LiveTranscription isActive={showTranscription} />
-              </div>
-            )}
-
-            {showMap && showTranscription && (
-              <div className="flex flex-col gap-4 h-full">
-                <div className="flex-1 bg-gray-900 rounded-lg overflow-hidden">
-                  <ParticipantsMap event={event} />
-                </div>
-                <div className="flex-1">
-                  <LiveTranscription isActive={showTranscription} />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Controls */}
@@ -214,26 +191,6 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
             </button>
 
             <button
-              onClick={() => setShowMap(!showMap)}
-              className={`p-3 rounded-full transition ${
-                showMap ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-              title={showMap ? 'Ocultar mapa' : 'Mostrar mapa'}
-            >
-              <Map className="w-5 h-5 text-white" />
-            </button>
-
-            <button
-              onClick={() => setShowTranscription(!showTranscription)}
-              className={`p-3 rounded-full transition ${
-                showTranscription ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-              title={showTranscription ? 'Ocultar transcripción' : 'Mostrar transcripción'}
-            >
-              <FileText className="w-5 h-5 text-white" />
-            </button>
-
-            <button
               onClick={leaveCall}
               className="p-3 rounded-full bg-red-600 hover:bg-red-700 transition"
               title="Salir de la llamada"
@@ -242,8 +199,18 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
             </button>
           </div>
 
-          {/* Right: Empty for symmetry */}
-          <div className="w-32"></div>
+          {/* Right: Transcription toggle */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowTranscription(!showTranscription)}
+              className={`p-3 rounded-full transition ${
+                showTranscription ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={showTranscription ? 'Ocultar transcripción' : 'Mostrar transcripción'}
+            >
+              <FileText className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

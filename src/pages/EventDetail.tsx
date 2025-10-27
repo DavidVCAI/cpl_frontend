@@ -88,14 +88,10 @@ export default function EventDetail() {
       setRoomToken(response.token);
       setInVideoRoom(true);
 
-      // Notify via WebSocket that user joined event
-      sendMessage({
-        type: 'join_event',
-        event_id: event.id
-      });
+      // DON'T send WebSocket join_event - the REST API already handles adding participant
+      // Sending it would create duplicate participants
 
-      // DON'T reload event here - the polling effect will handle updates
-      // This prevents infinite reload loops
+      // DON'T reload event here - prevents infinite reload loops
 
     } catch (error: any) {
       toast.error(error.message || 'Error al unirse al evento');
