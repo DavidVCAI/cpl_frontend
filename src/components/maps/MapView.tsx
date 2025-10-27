@@ -260,7 +260,7 @@ export default function MapView({ onMapClick }: MapViewProps = {}) {
                 </p>
               </div>
               <button
-                onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                onClick={() => navigate(`/events/${selectedEvent.id}`)}
                 className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded transition"
               >
                 Ver Evento
