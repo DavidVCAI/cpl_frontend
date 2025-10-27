@@ -22,20 +22,24 @@ export default function EventDetail() {
   const [roomToken, setRoomToken] = useState<string | undefined>(undefined);
   const [liveDuration, setLiveDuration] = useState(0);
 
+  // Load event on mount and when eventId changes
   useEffect(() => {
     if (eventId) {
       loadEvent();
-
-      // Poll for updates every 5 seconds when in video room
-      const interval = setInterval(() => {
-        if (inVideoRoom) {
-          loadEvent();
-        }
-      }, 5000);
-
-      return () => clearInterval(interval);
     }
-  }, [eventId, inVideoRoom]);
+  }, [eventId]);
+
+  // Separate effect for polling when in video room
+  useEffect(() => {
+    if (!inVideoRoom || !eventId) return;
+
+    // Poll for updates every 5 seconds when in video room
+    const interval = setInterval(() => {
+      loadEvent();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [inVideoRoom, eventId]);
 
   // Calculate live duration for active events
   useEffect(() => {
