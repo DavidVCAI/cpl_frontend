@@ -30,12 +30,27 @@ export default function EventDetail() {
   useEffect(() => {
     if (!event || event.status !== 'active') return;
 
-    const interval = setInterval(() => {
+    const calculateDuration = () => {
       const now = new Date();
       const startTime = new Date(event.starts_at);
+
+      // Validate that startTime is valid
+      if (isNaN(startTime.getTime())) {
+        console.error('Invalid start time:', event.starts_at);
+        setLiveDuration(0);
+        return;
+      }
+
       const durationMinutes = Math.floor((now.getTime() - startTime.getTime()) / 60000);
-      setLiveDuration(durationMinutes);
-    }, 1000); // Update every second
+      // Ensure duration is not negative
+      setLiveDuration(Math.max(0, durationMinutes));
+    };
+
+    // Calculate immediately
+    calculateDuration();
+
+    // Update every second
+    const interval = setInterval(calculateDuration, 1000);
 
     return () => clearInterval(interval);
   }, [event]);

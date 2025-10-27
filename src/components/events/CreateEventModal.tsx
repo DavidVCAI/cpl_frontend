@@ -9,9 +9,10 @@ import toast from 'react-hot-toast';
 
 interface CreateEventModalProps {
   onClose: () => void;
+  initialCoordinates?: [number, number] | null;
 }
 
-export default function CreateEventModal({ onClose }: CreateEventModalProps) {
+export default function CreateEventModal({ onClose, initialCoordinates }: CreateEventModalProps) {
   const user = useAuthStore((state) => state.user);
   const addEvent = useEventsStore((state) => state.addEvent);
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export default function CreateEventModal({ onClose }: CreateEventModalProps) {
     title: '',
     description: '',
     category: 'cultura',
-    coordinates: [-74.0721, 4.7110], // Bogotá center default
+    coordinates: initialCoordinates || [-74.0721, 4.7110], // Use clicked location or Bogotá center default
     address: '',
   });
 

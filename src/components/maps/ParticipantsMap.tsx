@@ -17,7 +17,7 @@ export default function ParticipantsMap({ event }: ParticipantsMapProps) {
   const { locations } = useWebSocket();
 
   const { isLoaded } = useJsApiLoader({
-    id: "google-map-script-participants",
+    id: "google-map-script", // Use same ID as MapView to avoid loader conflict
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
   });
 

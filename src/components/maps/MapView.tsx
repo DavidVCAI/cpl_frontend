@@ -16,7 +16,11 @@ const containerStyle = {
 
 const defaultCenter = { lat: 4.711, lng: -74.0721 }; // Bogotá
 
-export default function MapView() {
+interface MapViewProps {
+  onMapClick?: (coordinates: [number, number]) => void;
+}
+
+export default function MapView({ onMapClick }: MapViewProps = {}) {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { currentLocation, error: locationError, isTracking } = useRealTimeLocation();
@@ -124,6 +128,13 @@ export default function MapView() {
         mapContainerStyle={containerStyle}
         center={mapCenter}
         zoom={14}
+        onClick={(e) => {
+          if (onMapClick && e.latLng) {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            onMapClick([lng, lat]); // [lng, lat] format
+          }
+        }}
         options={{
           disableDefaultUI: false,
           zoomControl: true,

@@ -11,10 +11,21 @@ export default function Dashboard() {
   const { user, logout } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'events' | 'map' | 'collectibles'>('events');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<[number, number] | null>(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleMapClick = (coordinates: [number, number]) => {
+    const confirmed = window.confirm(
+      `¿Crear evento en esta ubicación?\n\nCoordenadas: ${coordinates[1].toFixed(4)}, ${coordinates[0].toFixed(4)}`
+    );
+    if (confirmed) {
+      setSelectedCoordinates(coordinates);
+      setShowCreateModal(true);
+    }
   };
 
   if (!user) {
@@ -147,7 +158,7 @@ export default function Dashboard() {
           {activeTab === 'map' && (
             <div className="p-6 h-[600px]">
               <div className="bg-gray-700/30 rounded-lg overflow-hidden h-full border border-gray-600">
-                <MapView />
+                <MapView onMapClick={handleMapClick} />
               </div>
             </div>
           )}
@@ -172,7 +183,15 @@ export default function Dashboard() {
       </div>
 
       {/* Create Event Modal */}
-      {showCreateModal && <CreateEventModal onClose={() => setShowCreateModal(false)} />}
+      {showCreateModal && (
+        <CreateEventModal
+          onClose={() => {
+            setShowCreateModal(false);
+            setSelectedCoordinates(null);
+          }}
+          initialCoordinates={selectedCoordinates}
+        />
+      )}
     </div>
   );
 }
