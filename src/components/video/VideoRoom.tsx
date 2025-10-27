@@ -1,21 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import DailyIframe from '@daily-co/daily-js';
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users } from 'lucide-react';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, Map } from 'lucide-react';
+import ParticipantsMap from '../maps/ParticipantsMap';
+import type { Event } from '../../types';
 
 interface VideoRoomProps {
   roomUrl: string;
   token?: string;
   userName: string;
+  event: Event;
   onLeave?: () => void;
 }
 
-export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRoomProps) {
+export default function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps) {
   const callFrame = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -119,15 +123,29 @@ export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRo
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
-      {/* Video Container */}
-      <div
-        ref={containerRef}
-        className="relative bg-gray-900 rounded-t-lg"
-        style={{ height: '600px' }}
-      />
+      {/* Video and Map Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+        {/* Video Container */}
+        <div className={`${showMap ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+          <div
+            ref={containerRef}
+            className="relative bg-gray-900 rounded-lg"
+            style={{ height: '600px' }}
+          />
+        </div>
+
+        {/* Participants Map */}
+        {showMap && (
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ height: '600px' }}>
+              <ParticipantsMap event={event} />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Controls */}
-      <div className="bg-gray-800 p-4 rounded-b-lg">
+      <div className="bg-gray-800 p-4">
         <div className="flex items-center justify-between">
           {/* Left: Participant count */}
           <div className="flex items-center space-x-2 text-gray-300">
@@ -163,6 +181,16 @@ export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRo
               title="Compartir pantalla"
             >
               <Monitor className="w-5 h-5 text-white" />
+            </button>
+
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={`p-3 rounded-full transition ${
+                showMap ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={showMap ? 'Ocultar mapa' : 'Mostrar mapa'}
+            >
+              <Map className="w-5 h-5 text-white" />
             </button>
 
             <button

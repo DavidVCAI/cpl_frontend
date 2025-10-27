@@ -18,12 +18,27 @@ export default function EventDetail() {
   const [joining, setJoining] = useState(false);
   const [inVideoRoom, setInVideoRoom] = useState(false);
   const [roomToken, setRoomToken] = useState<string | undefined>(undefined);
+  const [liveDuration, setLiveDuration] = useState(0);
 
   useEffect(() => {
     if (eventId) {
       loadEvent();
     }
   }, [eventId]);
+
+  // Calculate live duration for active events
+  useEffect(() => {
+    if (!event || event.status !== 'active') return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const startTime = new Date(event.starts_at);
+      const durationMinutes = Math.floor((now.getTime() - startTime.getTime()) / 60000);
+      setLiveDuration(durationMinutes);
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [event]);
 
   const loadEvent = async () => {
     if (!eventId) return;
@@ -219,8 +234,12 @@ export default function EventDetail() {
             <p className="text-3xl font-bold text-white">{event.metadata.views}</p>
           </div>
           <div className="bg-gray-800 rounded-lg p-6">
-            <p className="text-gray-400 text-sm mb-1">Duración Total</p>
-            <p className="text-3xl font-bold text-white">{event.metadata.total_minutes} min</p>
+            <p className="text-gray-400 text-sm mb-1">
+              {event.status === 'active' ? '⏱️ Duración en Vivo' : 'Duración Total'}
+            </p>
+            <p className="text-3xl font-bold text-white">
+              {event.status === 'active' ? liveDuration : event.metadata.total_minutes} min
+            </p>
           </div>
           <div className="bg-gray-800 rounded-lg p-6">
             <p className="text-gray-400 text-sm mb-1">Pico de Participantes</p>
@@ -235,6 +254,7 @@ export default function EventDetail() {
               roomUrl={event.room.daily_room_url}
               token={roomToken}
               userName={user?.name || 'Usuario'}
+              event={event}
               onLeave={handleLeaveVideoRoom}
             />
           ) : (
