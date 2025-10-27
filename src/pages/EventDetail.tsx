@@ -14,7 +14,7 @@ export default function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const { sendMessage } = useWebSocket();
+  useWebSocket(); // Initialize WebSocket connection for real-time updates
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
