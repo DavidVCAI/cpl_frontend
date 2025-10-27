@@ -99,18 +99,45 @@ export interface ApiResponse<T> {
 // WebSocket Message Types
 export interface WSMessage {
   type: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LocationUpdate extends WSMessage {
   type: 'location_update';
-  coordinates: [number, number];
+  user_id: string;
+  coordinates: [number, number]; // [lng, lat]
+  timestamp: string;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
 }
 
 export interface NearbyEventsMessage extends WSMessage {
   type: 'nearby_events';
   events: Event[];
   timestamp: string;
+}
+
+export interface NearbyUsersMessage extends WSMessage {
+  type: 'nearby_users';
+  users: UserLocation[];
+  timestamp: string;
+}
+
+export interface UserDisconnectedMessage extends WSMessage {
+  type: 'user_disconnected';
+  user_id: string;
+  timestamp: string;
+}
+
+export interface UserLocation {
+  user_id: string;
+  coordinates: [number, number]; // [lng, lat]
+  timestamp: string;
+  distance?: number; // in km
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
 }
 
 // Event Categories

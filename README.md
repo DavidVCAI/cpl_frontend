@@ -31,8 +31,18 @@ This project follows the **GitFlow branching model**:
 - `feature/*`, `release/*`, `hotfix/*` → Managed by specific development tasks  
 
 ![img](./img/git-flow.png)
-> [!NOTE] The GitFlow diagram. 
-> Image by the author inspired by [Vincent Driessen](https://nvie.com/posts/a-successful-git-branching-model)
+
+> [!NOTE] 
+>
+> _The GitFlow diagram_
+> _Image by the author inspired by [Vincent Driessen](https://nvie.com/posts/a-successful-git-branching-model)_
+
+
+
+```bash
+# Start work-flow
+git flow init
+```
 
 
 ---
@@ -53,6 +63,14 @@ npm run build
 
 ---
 
+## License
+
+MIT – See the [`LICENCE`](./LICENSE) file for details.
+
+
+
+---
+
 ## Credits
 
 **Team (GitHub Profiles):** 
@@ -60,8 +78,9 @@ npm run build
 - [David Velásquez](https://github.com/DavidVCAI)
 - [Geronimo Martínez](https://github.com/MimiRandomS)
 
-© 2025 City Pulse Live, Escuela Colombiana de Ingeniería Julio Garavito.  
-ARSW - Software Architectures
+**© 2025 City Pulse Live, ARSW - Software Architectures**
 
-All rights reserved.
+**Escuela Colombiana de Ingeniería Julio Garavito**
+
+**All rights reserved.**
 
