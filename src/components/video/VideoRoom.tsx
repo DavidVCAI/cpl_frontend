@@ -12,7 +12,6 @@ interface VideoRoomProps {
 export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRoomProps) {
   const callFrame = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isJoined, setIsJoined] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
@@ -41,7 +40,6 @@ export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRo
           token,
           userName,
         });
-        setIsJoined(true);
       } catch (err: any) {
         console.error('Error joining call:', err);
         setError('Error al unirse a la sala de video');
@@ -60,7 +58,6 @@ export default function VideoRoom({ roomUrl, token, userName, onLeave }: VideoRo
     });
 
     callFrame.current.on('left-meeting', () => {
-      setIsJoined(false);
       if (onLeave) onLeave();
     });
 
