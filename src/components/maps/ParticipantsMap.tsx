@@ -9,8 +9,6 @@ const containerStyle = {
   borderRadius: "0.5rem",
 };
 
-const defaultCenter = { lat: 4.711, lng: -74.0721 }; // Bogotá
-
 interface ParticipantsMapProps {
   event: Event;
 }
