@@ -3,6 +3,10 @@ import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-map
 import { useRealTimeLocation } from "../../hooks/useRealTimeLocation";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuthStore } from "../../store/authStore";
+import { useEventsStore } from "../../store/eventsStore";
+import { eventsService } from "../../services/events";
+import { useNavigate } from "react-router-dom";
+import type { Event } from "../../types";
 
 const containerStyle = {
   width: "100%",
@@ -14,15 +18,38 @@ const defaultCenter = { lat: 4.711, lng: -74.0721 }; // Bogotá
 
 export default function MapView() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const { currentLocation, error: locationError, isTracking } = useRealTimeLocation();
   const { locations, isConnected } = useWebSocket();
+  const { events, setEvents } = useEventsStore();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>(defaultCenter);
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
   });
+
+  // Fetch events on mount
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      // Fetch all events (active and ended) near Bogotá
+      const bogotaCenter: [number, number] = [-74.0721, 4.7110];
+      const fetchedEvents = await eventsService.getNearbyEvents(
+        bogotaCenter[0],
+        bogotaCenter[1],
+        50000 // 50km radius
+      );
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+  };
 
   // Update map center when current location is available
   useEffect(() => {
@@ -40,6 +67,11 @@ export default function MapView() {
     // Filter out current user
     return locationsArray.filter(loc => loc.user_id !== user?.id);
   }, [locations, user?.id]);
+
+  // Filter only active events for map display
+  const activeEvents = useMemo(() => {
+    return events.filter(event => event.status === 'active');
+  }, [events]);
 
   if (!isLoaded) {
     return (
@@ -80,6 +112,11 @@ export default function MapView() {
         {/* Users count */}
         <div className="px-3 py-2 rounded-lg shadow-lg text-sm font-medium bg-gray-800 text-white">
           👥 {otherUsersLocations.length} usuarios cerca
+        </div>
+
+        {/* Events count */}
+        <div className="px-3 py-2 rounded-lg shadow-lg text-sm font-medium bg-indigo-600 text-white">
+          📍 {activeEvents.length} eventos activos
         </div>
       </div>
 
@@ -142,6 +179,21 @@ export default function MapView() {
           />
         ))}
 
+        {/* Event markers */}
+        {activeEvents.map((event) => (
+          <Marker
+            key={event.id}
+            position={{ lat: event.location.coordinates[1], lng: event.location.coordinates[0] }}
+            icon={{
+              url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+              scaledSize: new google.maps.Size(45, 45),
+            }}
+            title={event.title}
+            animation={google.maps.Animation.BOUNCE}
+            onClick={() => setSelectedEvent(event)}
+          />
+        ))}
+
         {/* Info window for selected user */}
         {selectedUser && locations.has(selectedUser) && (
           <InfoWindow
@@ -169,6 +221,39 @@ export default function MapView() {
               <p className="text-xs text-gray-500 mt-1">
                 🕐 {new Date(locations.get(selectedUser)!.timestamp).toLocaleTimeString()}
               </p>
+            </div>
+          </InfoWindow>
+        )}
+
+        {/* Info window for selected event */}
+        {selectedEvent && (
+          <InfoWindow
+            position={{
+              lat: selectedEvent.location.coordinates[1],
+              lng: selectedEvent.location.coordinates[0],
+            }}
+            onCloseClick={() => setSelectedEvent(null)}
+          >
+            <div className="p-3 text-gray-900 max-w-xs">
+              <h3 className="font-bold text-lg mb-2">{selectedEvent.title}</h3>
+              <p className="text-sm text-gray-700 mb-2">{selectedEvent.description}</p>
+              <div className="space-y-1 mb-3">
+                <p className="text-xs text-gray-600">
+                  📍 {selectedEvent.location.address || 'Bogotá, Colombia'}
+                </p>
+                <p className="text-xs text-gray-600">
+                  👥 {selectedEvent.room.current_participants}/{selectedEvent.room.max_participants} participantes
+                </p>
+                <p className="text-xs text-gray-600 capitalize">
+                  🏷️ {selectedEvent.category}
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded transition"
+              >
+                Ver Evento
+              </button>
             </div>
           </InfoWindow>
         )}
