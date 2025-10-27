@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import DailyIframe from '@daily-co/daily-js';
 import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, Map, FileText } from 'lucide-react';
 import ParticipantsMap from '../maps/ParticipantsMap';
@@ -13,14 +13,14 @@ interface VideoRoomProps {
   onLeave?: () => void;
 }
 
-export default function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps) {
+function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps) {
   const callFrame = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(true);
+  const [showMap, setShowMap] = useState(false);  // Temporarily disabled
   const [showTranscription, setShowTranscription] = useState(false);
 
   useEffect(() => {
@@ -249,3 +249,13 @@ export default function VideoRoom({ roomUrl, token, userName, event, onLeave }: 
     </div>
   );
 }
+
+// Memoize to prevent re-renders when parent updates
+export default memo(VideoRoom, (prevProps, nextProps) => {
+  // Only re-render if these critical props change
+  return (
+    prevProps.roomUrl === nextProps.roomUrl &&
+    prevProps.token === nextProps.token &&
+    prevProps.userName === nextProps.userName
+  );
+});
