@@ -103,8 +103,8 @@ export default function EventDetail() {
         event_id: event.id
       });
 
-      // Reload event to get updated participants
-      await loadEvent();
+      // DON'T reload event here - the polling effect will handle updates
+      // This prevents infinite reload loops
 
     } catch (error: any) {
       toast.error(error.message || 'Error al unirse al evento');
