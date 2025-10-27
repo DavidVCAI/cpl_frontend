@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, MapPin, Users, Video, Loader2, Trophy } from 'luci
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import VideoRoom from '../components/video/VideoRoom';
 
 export default function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -15,6 +16,8 @@ export default function EventDetail() {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [inVideoRoom, setInVideoRoom] = useState(false);
+  const [roomToken, setRoomToken] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (eventId) {
@@ -45,17 +48,21 @@ export default function EventDetail() {
       const response = await eventsService.joinEvent(event.id, user.id);
       toast.success('¡Te has unido al evento!');
 
-      // For MVP: Show alert about video room (will be implemented later)
-      toast.success(`Sala de video: ${response.room_url}`, { duration: 5000 });
-
-      // TODO: Navigate to video room page when implemented
-      // navigate(`/events/${event.id}/room`, { state: { token: response.token } });
+      // Set video room state
+      setRoomToken(response.token);
+      setInVideoRoom(true);
 
     } catch (error: any) {
       toast.error(error.message || 'Error al unirse al evento');
     } finally {
       setJoining(false);
     }
+  };
+
+  const handleLeaveVideoRoom = () => {
+    setInVideoRoom(false);
+    setRoomToken(undefined);
+    toast.success('Has salido de la sala de video');
   };
 
   const handleEndEvent = async () => {
@@ -221,16 +228,29 @@ export default function EventDetail() {
           </div>
         </div>
 
-        {/* Video Room Placeholder */}
-        <div className="mt-6 bg-gray-800 rounded-lg p-8">
-          <div className="bg-gray-700/30 rounded-lg border-2 border-dashed border-gray-600 h-96 flex items-center justify-center">
-            <div className="text-center">
-              <Video className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-400 mb-2">Sala de Video</h3>
-              <p className="text-gray-500">Componente de Daily.co (En desarrollo)</p>
-              <p className="text-sm text-gray-600 mt-2">Se implementará en la siguiente fase</p>
+        {/* Video Room */}
+        <div className="mt-6">
+          {inVideoRoom && event.room.daily_room_url ? (
+            <VideoRoom
+              roomUrl={event.room.daily_room_url}
+              token={roomToken}
+              userName={user?.name || 'Usuario'}
+              onLeave={handleLeaveVideoRoom}
+            />
+          ) : (
+            <div className="bg-gray-800 rounded-lg p-8">
+              <div className="bg-gray-700/30 rounded-lg border-2 border-dashed border-gray-600 h-96 flex items-center justify-center">
+                <div className="text-center">
+                  <Video className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-400 mb-2">Sala de Video</h3>
+                  <p className="text-gray-500">Únete al evento para acceder a la videollamada</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Haz clic en "Unirse al Evento" para comenzar
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
