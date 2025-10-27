@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import DailyIframe from '@daily-co/daily-js';
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText } from 'lucide-react';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText, Map } from 'lucide-react';
 import type { Event } from '../../types';
 import LiveTranscription from '../transcription/LiveTranscription';
+import ParticipantsMap from '../maps/ParticipantsMap';
 
 interface VideoRoomProps {
   roomUrl: string;
@@ -20,6 +21,7 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
   const [participantCount, setParticipantCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [showTranscription, setShowTranscription] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -132,9 +134,13 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
-      {/* Video Container with optional transcription panel */}
+      {/* Video Container with optional transcription and map panels */}
       <div className="p-4">
-        <div className={`grid gap-4 ${showTranscription ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-4 ${
+          showTranscription && showMap ? 'grid-cols-3' :
+          (showTranscription || showMap) ? 'grid-cols-2' :
+          'grid-cols-1'
+        }`}>
           {/* Video */}
           <div
             ref={containerRef}
@@ -146,6 +152,13 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
           {showTranscription && (
             <div style={{ height: '600px' }}>
               <LiveTranscription isActive={showTranscription} />
+            </div>
+          )}
+
+          {/* Map Panel */}
+          {showMap && (
+            <div style={{ height: '600px' }}>
+              <ParticipantsMap event={event} />
             </div>
           )}
         </div>
@@ -199,8 +212,17 @@ function VideoRoom({ roomUrl, token, userName, event, onLeave }: VideoRoomProps)
             </button>
           </div>
 
-          {/* Right: Transcription toggle */}
-          <div className="flex items-center">
+          {/* Right: Map and Transcription toggles */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={`p-3 rounded-full transition ${
+                showMap ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={showMap ? 'Ocultar mapa' : 'Mostrar mapa'}
+            >
+              <Map className="w-5 h-5 text-white" />
+            </button>
             <button
               onClick={() => setShowTranscription(!showTranscription)}
               className={`p-3 rounded-full transition ${
