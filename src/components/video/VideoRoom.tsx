@@ -33,10 +33,19 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
 
     // WebSocket listener for real-time collectible drops
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id || !event?.id) return;
 
         const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
         const ws = new WebSocket(`${WS_URL}/ws/${user.id}`);
+
+        ws.onopen = () => {
+            console.log('✅ WebSocket connected, joining event:', event.id);
+            // Join the event to receive collectible broadcasts
+            ws.send(JSON.stringify({
+                type: 'join_event',
+                event_id: event.id
+            }));
+        };
 
         ws.onmessage = (event) => {
             try {
@@ -45,7 +54,17 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
                 // Collectible dropped - show to ALL users in the event
                 if (message.type === 'collectible_drop' && message.collectible) {
                     console.log('🎁 New collectible dropped:', message.collectible);
-                    setActiveCollectible(message.collectible);
+
+                    // Transform backend format to frontend format
+                    const frontendCollectible = {
+                        id: message.collectible._id,
+                        name: message.collectible.name,
+                        rarity: message.collectible.type,
+                        image: message.collectible.image_url,
+                        description: message.collectible.description
+                    };
+
+                    setActiveCollectible(frontendCollectible);
                     setShowCollectible(true);
                 }
 
@@ -68,9 +87,16 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
         wsRef.current = ws;
 
         return () => {
+            // Leave the event when component unmounts
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'leave_event',
+                    event_id: event.id
+                }));
+            }
             ws.close();
         };
-    }, [user?.id]);
+    }, [user?.id, event?.id]);
 
     useEffect(() => {
         if (!containerRef.current) return;
