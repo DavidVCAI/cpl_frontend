@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collectibleImages } from "@/constants/collectibleImages";
 import { Trophy } from "lucide-react";
+import { usersService } from "@/services/users";
 
 interface Collectible {
     _id: string;
@@ -20,12 +21,10 @@ export default function UserCollectibles({ userId }: Props) {
     useEffect(() => {
         const fetchCollectibles = async () => {
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/collectibles/user/${userId}`);
-                if (!res.ok) throw new Error("Error al cargar coleccionables");
-                const data = await res.json();
+                const data = await usersService.getUserCollectibles(userId);
                 setCollectibles(data.collectibles || []);
             } catch (err) {
-                console.error(err);
+                console.error("Error al obtener los coleccionables del usuario:", err);
             } finally {
                 setLoading(false);
             }

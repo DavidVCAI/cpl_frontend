@@ -1,4 +1,4 @@
-// src/services/collectibles.ts
+// src/services/collectiblesService.ts
 import api from "./api";
 
 export const collectiblesService = {
@@ -10,6 +10,13 @@ export const collectiblesService = {
     async claim(collectibleId: string, userId: string) {
         const res = await api.post(`/api/collectibles/claim`, null, {
             params: { collectible_id: collectibleId, user_id: userId },
+        });
+        return res.data;
+    },
+
+    async generate(eventId: string) {
+        const res = await api.post(`/api/collectibles/generate`, null, {
+            params: { event_id: eventId },
         });
         return res.data;
     },

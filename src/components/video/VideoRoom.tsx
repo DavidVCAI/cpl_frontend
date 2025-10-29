@@ -1,12 +1,11 @@
 import {useEffect, useRef, useState, memo} from 'react';
 import DailyIframe from '@daily-co/daily-js';
 import {Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText, Map} from 'lucide-react';
-import type {Event} from '../../types';
+import type {Event} from '@/types';
 import LiveTranscription from '../transcription/LiveTranscription';
 import ParticipantsMap from '../maps/ParticipantsMap';
 import {CollectibleOverlay} from "@/components/collectible/CollectibleOverlay.tsx";
 import { useCollectibles } from "@/hooks/useCollectibles";
-import { collectibleImages } from "@/constants/collectibleImages";
 import { collectiblesService } from "@/services/collectibles";
 
 
@@ -30,7 +29,17 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     const [activeCollectible, setActiveCollectible] = useState<any | null>(null);
     const [showCollectible, setShowCollectible] = useState(false);
     const { collectibles } = useCollectibles(event.id);
+    const [lastShownId, setLastShownId] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (!collectibles || collectibles.length === 0) return;
+        const latest = collectibles[0];
+        if (!latest) return;
+        if (latest.id === lastShownId) return;
+        setActiveCollectible(latest);
+        setShowCollectible(true);
+        setLastShownId(latest.id);
+    }, [collectibles, lastShownId]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -78,21 +87,9 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
 
     useEffect(() => {
         if (!collectibles || collectibles.length === 0) return;
-
-        const latest = collectibles[0];
-        if (!latest) return;
-
-        setActiveCollectible({
-            id: latest._id,
-            name: latest.name,
-            rarity: latest.type,
-            description: latest.description,
-            image: collectibleImages[latest.type] || collectibleImages.common,
-        });
-
+        setActiveCollectible(collectibles[0]);
         setShowCollectible(true);
     }, [collectibles]);
-
 
 
     const updateParticipantCount = () => {
