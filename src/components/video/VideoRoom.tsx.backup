@@ -5,8 +5,7 @@ import type {Event} from '@/types';
 import LiveTranscription from '../transcription/LiveTranscription';
 import ParticipantsMap from '../maps/ParticipantsMap';
 import {CollectibleOverlay} from "@/components/collectible/CollectibleOverlay.tsx";
-import { useAuthStore } from '@/store/authStore';
-import toast from 'react-hot-toast';
+import { useCollectibles } from "@/hooks/useCollectibles";
 
 
 interface VideoRoomProps {
@@ -28,49 +27,18 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     const [showMap, setShowMap] = useState(false);
     const [activeCollectible, setActiveCollectible] = useState<any | null>(null);
     const [showCollectible, setShowCollectible] = useState(false);
-    const user = useAuthStore((state) => state.user);
-    const wsRef = useRef<WebSocket | null>(null);
+    const { collectibles } = useCollectibles(event.id);
+    const [lastShownId, setLastShownId] = useState<string | null>(null);
 
-    // WebSocket listener for real-time collectible drops
     useEffect(() => {
-        if (!user?.id) return;
-
-        const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
-        const ws = new WebSocket(`${WS_URL}/ws/${user.id}`);
-
-        ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-
-                // Collectible dropped - show to ALL users in the event
-                if (message.type === 'collectible_drop' && message.collectible) {
-                    console.log('🎁 New collectible dropped:', message.collectible);
-                    setActiveCollectible(message.collectible);
-                    setShowCollectible(true);
-                }
-
-                // Collectible claimed - hide for everyone
-                if (message.type === 'collectible_claimed') {
-                    console.log('📦 Collectible claimed by:', message.winner_id);
-                    if (message.winner_id === user.id) {
-                        toast.success('🎉 ¡Has reclamado el coleccionable!');
-                    } else {
-                        toast.error(`😔 ${message.winner_name || 'Otro usuario'} lo reclamó primero`);
-                    }
-                    setShowCollectible(false);
-                    setActiveCollectible(null);
-                }
-            } catch (err) {
-                console.error('Error parsing WebSocket message:', err);
-            }
-        };
-
-        wsRef.current = ws;
-
-        return () => {
-            ws.close();
-        };
-    }, [user?.id]);
+        if (!collectibles || collectibles.length === 0) return;
+        const latest = collectibles[0];
+        if (!latest) return;
+        if (latest.id === lastShownId) return;
+        setActiveCollectible(latest);
+        setShowCollectible(true);
+        setLastShownId(latest.id);
+    }, [collectibles, lastShownId]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -115,6 +83,13 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
             callFrame.current?.destroy();
         };
     }, [roomUrl, token, userName]);
+
+    useEffect(() => {
+        if (!collectibles || collectibles.length === 0) return;
+        setActiveCollectible(collectibles[0]);
+        setShowCollectible(true);
+    }, [collectibles]);
+
 
     const updateParticipantCount = () => {
         if (callFrame.current) {
