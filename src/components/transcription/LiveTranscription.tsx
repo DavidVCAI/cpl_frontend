@@ -67,7 +67,7 @@ export default function LiveTranscription({ isActive }: LiveTranscriptionProps) 
 
       // Handle transcription events
       connection.on(LiveTranscriptionEvents.Open, () => {
-        console.log('Deepgram connection opened');
+        console.log('✅ Deepgram connection opened - Ready for Spanish transcription');
         setIsRecording(true);
 
         // Create MediaRecorder to send audio
@@ -92,6 +92,7 @@ export default function LiveTranscription({ isActive }: LiveTranscriptionProps) 
 
           if (isFinal) {
             // Add final transcript to history
+            console.log('📝 Final Spanish transcript:', transcript);
             setTranscripts(prev => [
               ...prev,
               {
@@ -103,6 +104,7 @@ export default function LiveTranscription({ isActive }: LiveTranscriptionProps) 
             setCurrentTranscript('');
           } else {
             // Update current interim transcript
+            console.log('💬 Interim Spanish transcript:', transcript);
             setCurrentTranscript(transcript);
           }
         }

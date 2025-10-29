@@ -14,7 +14,7 @@ export default function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const { sendMessage } = useWebSocket();
+  useWebSocket(); // Initialize WebSocket connection for real-time updates
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -22,20 +22,15 @@ export default function EventDetail() {
   const [roomToken, setRoomToken] = useState<string | undefined>(undefined);
   const [liveDuration, setLiveDuration] = useState(0);
 
+  // Load event on mount and when eventId changes
   useEffect(() => {
     if (eventId) {
       loadEvent();
-
-      // Poll for updates every 5 seconds when in video room
-      const interval = setInterval(() => {
-        if (inVideoRoom) {
-          loadEvent();
-        }
-      }, 5000);
-
-      return () => clearInterval(interval);
     }
-  }, [eventId, inVideoRoom]);
+  }, [eventId]);
+
+  // DO NOT poll when in video room - it causes VideoRoom to unmount/remount
+  // Updates will come via WebSocket instead
 
   // Calculate live duration for active events
   useEffect(() => {
@@ -93,14 +88,10 @@ export default function EventDetail() {
       setRoomToken(response.token);
       setInVideoRoom(true);
 
-      // Notify via WebSocket that user joined event
-      sendMessage({
-        type: 'join_event',
-        event_id: event.id
-      });
+      // DON'T send WebSocket join_event - the REST API already handles adding participant
+      // Sending it would create duplicate participants
 
-      // Reload event to get updated participants
-      await loadEvent();
+      // DON'T reload event here - prevents infinite reload loops
 
     } catch (error: any) {
       toast.error(error.message || 'Error al unirse al evento');
@@ -289,6 +280,7 @@ export default function EventDetail() {
               roomUrl={event.room.daily_room_url}
               token={roomToken}
               userName={user?.name || 'Usuario'}
+              userId={user?.id || ''}
               event={event}
               onLeave={handleLeaveVideoRoom}
             />
