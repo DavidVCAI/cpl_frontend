@@ -3,11 +3,21 @@ import { collectibleImages } from "@/constants/collectibleImages";
 import { Trophy } from "lucide-react";
 import { usersService } from "@/services/users";
 
-interface Collectible {
+interface CollectibleData {
     _id: string;
     name: string;
-    rarity: keyof typeof collectibleImages;
+    type: keyof typeof collectibleImages;
     description?: string;
+    rarity_score?: number;
+}
+
+interface UserCollectibleItem {
+    user_id: string;
+    collectible_id: string;
+    claimed_at: string;
+    claim_order: number;
+    event_id: string;
+    collectible: CollectibleData;
 }
 
 interface Props {
@@ -15,16 +25,18 @@ interface Props {
 }
 
 export default function UserCollectibles({ userId }: Props) {
-    const [collectibles, setCollectibles] = useState<Collectible[]>([]);
+    const [collectibles, setCollectibles] = useState<UserCollectibleItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchCollectibles = async () => {
             try {
                 const data = await usersService.getUserCollectibles(userId);
-                setCollectibles(data.collectibles || []);
+                console.log("📦 Collectibles data received:", data);
+                setCollectibles(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Error al obtener los coleccionables del usuario:", err);
+                setCollectibles([]);
             } finally {
                 setLoading(false);
             }
@@ -52,41 +64,53 @@ export default function UserCollectibles({ userId }: Props) {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {collectibles.map((item) => (
-                <div
-                    key={item._id}
-                    className="bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform"
-                >
-                    <div className="relative w-full aspect-square flex items-center justify-center">
-                        <img
-                            src={collectibleImages[item.rarity] || collectibleImages["common"]}
-                            alt={item.name}
-                            className="w-24 h-24 object-contain mx-auto"
-                        />
-                        <span
-                            className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded ${
-                                item.rarity === "legendary"
-                                    ? "bg-yellow-500/20 text-yellow-300"
-                                    : item.rarity === "epic"
-                                        ? "bg-purple-500/20 text-purple-300"
-                                        : item.rarity === "rare"
-                                            ? "bg-blue-500/20 text-blue-300"
-                                            : "bg-gray-600/20 text-gray-400"
-                            }`}
+        <div>
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Tus Coleccionables</h2>
+                <p className="text-gray-400">Has obtenido {collectibles.length} coleccionables</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {collectibles.map((item) => {
+                    const coll = item.collectible;
+                    return (
+                        <div
+                            key={item.collectible_id}
+                            className="bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform"
                         >
-              {item.rarity.toUpperCase()}
-            </span>
-                    </div>
+                            <div className="relative w-full aspect-square flex items-center justify-center">
+                                <img
+                                    src={collectibleImages[coll.type] || collectibleImages["common"]}
+                                    alt={coll.name}
+                                    className="w-24 h-24 object-contain mx-auto"
+                                />
+                                <span
+                                    className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded ${
+                                        coll.type === "legendary"
+                                            ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500"
+                                            : coll.type === "epic"
+                                                ? "bg-purple-500/20 text-purple-300 border border-purple-500"
+                                                : coll.type === "rare"
+                                                    ? "bg-blue-500/20 text-blue-300 border border-blue-500"
+                                                    : "bg-gray-600/20 text-gray-400 border border-gray-600"
+                                    }`}
+                                >
+                                    {coll.type.toUpperCase()}
+                                </span>
+                            </div>
 
-                    <div className="mt-4 text-center">
-                        <h3 className="text-lg font-semibold text-white">{item.name}</h3>
-                        {item.description && (
-                            <p className="text-sm text-gray-400 mt-1">{item.description}</p>
-                        )}
-                    </div>
-                </div>
-            ))}
+                            <div className="mt-4 text-center">
+                                <h3 className="text-lg font-semibold text-white">{coll.name}</h3>
+                                {coll.description && (
+                                    <p className="text-sm text-gray-400 mt-1">{coll.description}</p>
+                                )}
+                                <div className="mt-2 text-xs text-gray-500">
+                                    Obtenido: {new Date(item.claimed_at).toLocaleDateString('es-ES')}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
