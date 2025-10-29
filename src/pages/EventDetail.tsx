@@ -280,7 +280,6 @@ export default function EventDetail() {
               roomUrl={event.room.daily_room_url}
               token={roomToken}
               userName={user?.name || 'Usuario'}
-              userId={user?.id || ''}
               event={event}
               onLeave={handleLeaveVideoRoom}
             />

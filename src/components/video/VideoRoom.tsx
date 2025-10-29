@@ -12,12 +12,11 @@ interface VideoRoomProps {
     roomUrl: string;
     token?: string;
     userName: string;
-    userId: string; // MongoDB ObjectId for claiming collectibles
     event: Event;
     onLeave?: () => void;
 }
 
-function VideoRoom({roomUrl, token, userName, userId, event, onLeave}: VideoRoomProps) {
+function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     const callFrame = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isMuted, setIsMuted] = useState(false);
@@ -101,7 +100,7 @@ function VideoRoom({roomUrl, token, userName, userId, event, onLeave}: VideoRoom
         }
     };
 
-    const handleClaimCollectible = (id: string) => {
+    const handleClaimCollectible = () => {
         // CollectibleOverlay already handled the claim, just close the modal
         console.log("✅ Coleccionable reclamado, cerrando overlay...");
         setShowCollectible(false);
@@ -279,7 +278,6 @@ export default memo(VideoRoom, (prevProps, nextProps) => {
     return (
         prevProps.roomUrl === nextProps.roomUrl &&
         prevProps.token === nextProps.token &&
-        prevProps.userName === nextProps.userName &&
-        prevProps.userId === nextProps.userId
+        prevProps.userName === nextProps.userName
     );
 });
