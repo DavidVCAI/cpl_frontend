@@ -47,6 +47,7 @@ export default function Login() {
           stats: response.user.stats,
           cognito_sub: response.user.cognito_sub,
           email: response.user.email,
+          created_at: response.user.created_at || new Date().toISOString(),
         },
         response.access_token
       );

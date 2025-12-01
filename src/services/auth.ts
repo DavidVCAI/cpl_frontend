@@ -41,6 +41,7 @@ export interface AuthUser {
     collectibles_count: number;
     total_video_minutes: number;
   };
+  created_at?: string;
 }
 
 export interface AuthResponse {
