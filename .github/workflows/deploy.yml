@@ -41,9 +41,10 @@ jobs:
           cd dist
           tar -czvf ../frontend-dist.tar.gz .
 
-      - name: Copy to S3
+      - name: Upload to S3
         run: |
-          aws s3 cp frontend-dist.tar.gz s3://citypulse-frontend-deploy/frontend-dist.tar.gz --region us-east-2 || echo "S3 bucket may not exist, using SSM directly"
+          aws s3 mb s3://citypulse-frontend-deploy --region us-east-2 || true
+          aws s3 cp frontend-dist.tar.gz s3://citypulse-frontend-deploy/frontend-dist.tar.gz --region us-east-2
 
       - name: Deploy to Frontend Instance
         run: |
@@ -51,21 +52,18 @@ jobs:
             --instance-ids "i-00f7f525633d70c5f" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ec2-user",
-              "if [ -d cpl_frontend ]; then cd cpl_frontend && git pull; else git clone https://github.com/DavidVCAI/cpl_frontend.git && cd cpl_frontend; fi",
-              "curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - || true",
-              "sudo yum install -y nodejs || true",
-              "npm ci",
-              "npm run build",
+              "cd /tmp",
+              "aws s3 cp s3://citypulse-frontend-deploy/frontend-dist.tar.gz . --region us-east-2",
               "sudo rm -rf /usr/share/nginx/html/*",
-              "sudo cp -r dist/* /usr/share/nginx/html/",
-              "sudo systemctl restart nginx"
+              "sudo tar -xzf frontend-dist.tar.gz -C /usr/share/nginx/html/",
+              "sudo systemctl restart nginx",
+              "rm frontend-dist.tar.gz"
             ]' \
             --comment "Deploy frontend from GitHub Actions"
 
       - name: Verify deployment
         run: |
           echo "Waiting for deployment to complete..."
-          sleep 60
+          sleep 30
           echo "Testing Frontend..."
-          curl -sf http://18.118.131.101 || echo "Frontend deployment pending"
+          curl -sf http://18.118.131.101 | head -20 || echo "Frontend deployment pending"
