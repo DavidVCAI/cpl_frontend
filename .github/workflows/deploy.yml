@@ -48,7 +48,7 @@ jobs:
       - name: Deploy to Frontend Instance
         run: |
           aws ssm send-command \
-            --instance-ids "i-0af59b78a2bb8fd97" \
+            --instance-ids "i-00f7f525633d70c5f" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "cd /home/ec2-user",
