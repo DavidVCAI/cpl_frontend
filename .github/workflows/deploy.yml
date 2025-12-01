@@ -27,7 +27,7 @@ jobs:
         env:
           VITE_API_URL: http://citypulse-backend-alb-597242547.us-east-2.elb.amazonaws.com
           VITE_WS_URL: ws://citypulse-backend-alb-597242547.us-east-2.elb.amazonaws.com
-          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
