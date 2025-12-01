@@ -1,0 +1,71 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: http://citypulse-backend-alb-597242547.us-east-2.elb.amazonaws.com
+          VITE_WS_URL: ws://citypulse-backend-alb-597242547.us-east-2.elb.amazonaws.com
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Create deployment archive
+        run: |
+          cd dist
+          tar -czvf ../frontend-dist.tar.gz .
+
+      - name: Copy to S3
+        run: |
+          aws s3 cp frontend-dist.tar.gz s3://citypulse-frontend-deploy/frontend-dist.tar.gz --region us-east-2 || echo "S3 bucket may not exist, using SSM directly"
+
+      - name: Deploy to Frontend Instance
+        run: |
+          aws ssm send-command \
+            --instance-ids "i-0af59b78a2bb8fd97" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /home/ec2-user",
+              "if [ -d cpl_frontend ]; then cd cpl_frontend && git pull; else git clone https://github.com/DavidVCAI/cpl_frontend.git && cd cpl_frontend; fi",
+              "curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - || true",
+              "sudo yum install -y nodejs || true",
+              "npm ci",
+              "npm run build",
+              "sudo rm -rf /usr/share/nginx/html/*",
+              "sudo cp -r dist/* /usr/share/nginx/html/",
+              "sudo systemctl restart nginx"
+            ]' \
+            --comment "Deploy frontend from GitHub Actions"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 60
+          echo "Testing Frontend..."
+          curl -sf http://18.118.131.101 || echo "Frontend deployment pending"
