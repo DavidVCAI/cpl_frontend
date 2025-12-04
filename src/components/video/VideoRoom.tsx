@@ -40,7 +40,8 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     useEffect(() => {
         if (!user?.id || !event?.id) return;
 
-        const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+        // Use direct backend connection for WebSocket (load balancers don't support sticky WS well)
+        const WS_URL = import.meta.env.VITE_WS_URL || 'ws://3.12.148.60:8000';
         const ws = new WebSocket(`${WS_URL}/ws/${user.id}`);
 
         ws.onopen = () => {
@@ -162,13 +163,17 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
         setShowCollectible(false);
     };
 
-    // Generate collectible (host only)
+    // Generate collectible (host only) - hits same backend as WebSocket
     const handleGenerateCollectible = async () => {
         if (!isHost || !event?.id) return;
 
         setIsGenerating(true);
         try {
-            await collectiblesService.generate(event.id);
+            // Call backend-1 directly to ensure broadcast reaches WebSocket connections
+            const BACKEND_URL = 'http://3.12.148.60:8000';
+            await fetch(`${BACKEND_URL}/api/collectibles/generate?event_id=${event.id}`, {
+                method: 'POST',
+            });
             toast.success('🎁 ¡Coleccionable generado! Todos los participantes pueden verlo.');
         } catch (err) {
             console.error('Error generating collectible:', err);
