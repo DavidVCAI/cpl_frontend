@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="legendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="25%" style="stop-color:#FFA500"/>
+      <stop offset="50%" style="stop-color:#FF6347"/>
+      <stop offset="75%" style="stop-color:#FFA500"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <linearGradient id="rainbowRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF0000"/>
+      <stop offset="20%" style="stop-color:#FF7F00"/>
+      <stop offset="40%" style="stop-color:#FFFF00"/>
+      <stop offset="60%" style="stop-color:#00FF00"/>
+      <stop offset="80%" style="stop-color:#0000FF"/>
+      <stop offset="100%" style="stop-color:#8B00FF"/>
+    </linearGradient>
+    <linearGradient id="legendShine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF;stop-opacity:0.7"/>
+      <stop offset="50%" style="stop-color:#FFF;stop-opacity:0"/>
+    </linearGradient>
+    <filter id="legendGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="sparkle">
+      <feGaussianBlur stdDeviation="1"/>
+    </filter>
+  </defs>
+  <!-- Animated-look outer rings -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="url(#rainbowRing)" stroke-width="3" opacity="0.5"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#FFD700" stroke-width="2" opacity="0.7"/>
+  <!-- Main Badge -->
+  <circle cx="100" cy="100" r="85" fill="url(#legendGrad)" filter="url(#legendGlow)"/>
+  <circle cx="100" cy="100" r="78" fill="none" stroke="url(#rainbowRing)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="72" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.8"/>
+  <!-- Inner sun design -->
+  <circle cx="100" cy="95" r="35" fill="#8B0000"/>
+  <circle cx="100" cy="95" r="30" fill="url(#legendGrad)"/>
+  <!-- Sun rays -->
+  <g fill="#FFD700">
+    <polygon points="100,50 105,65 95,65"/>
+    <polygon points="100,140 105,125 95,125"/>
+    <polygon points="55,95 70,90 70,100"/>
+    <polygon points="145,95 130,90 130,100"/>
+    <polygon points="65,60 78,70 72,78"/>
+    <polygon points="135,60 122,70 128,78"/>
+    <polygon points="65,130 78,120 72,112"/>
+    <polygon points="135,130 122,120 128,112"/>
+  </g>
+  <!-- Center Phoenix/Fire icon -->
+  <path d="M100,75 C110,85 115,95 110,105 C115,100 120,95 115,85 C120,90 125,100 115,115 C105,125 95,125 85,115 C75,100 80,90 85,85 C80,95 85,100 90,105 C85,95 90,85 100,75" fill="#FFFFFF" opacity="0.9"/>
+  <!-- Sparkles around -->
+  <g fill="#FFFFFF" filter="url(#sparkle)">
+    <polygon points="35,40 38,48 46,48 40,53 42,61 35,56 28,61 30,53 24,48 32,48"/>
+    <polygon points="165,35 167,41 173,41 169,45 170,51 165,48 160,51 161,45 157,41 163,41"/>
+    <polygon points="40,150 42,155 47,155 43,158 45,163 40,160 35,163 37,158 33,155 38,155"/>
+    <polygon points="160,145 162,150 167,150 163,153 165,158 160,155 155,158 157,153 153,150 158,150"/>
+    <polygon points="100,25 102,30 107,30 103,33 105,38 100,35 95,38 97,33 93,30 98,30"/>
+  </g>
+  <!-- Shine -->
+  <ellipse cx="80" cy="70" rx="30" ry="20" fill="url(#legendShine)"/>
+  <!-- Text with shadow -->
+  <text x="101" y="171" text-anchor="middle" fill="#8B0000" font-family="Arial Black" font-size="14" font-weight="bold">LEGENDARY</text>
+  <text x="100" y="170" text-anchor="middle" fill="#FFD700" font-family="Arial Black" font-size="14" font-weight="bold">LEGENDARY</text>
+</svg>

@@ -1,11 +1,12 @@
 import {useEffect, useRef, useState, memo} from 'react';
 import DailyIframe from '@daily-co/daily-js';
-import {Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText, Map} from 'lucide-react';
+import {Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, Users, FileText, Map, Gift} from 'lucide-react';
 import type {Event} from '@/types';
 import LiveTranscription from '../transcription/LiveTranscription';
 import ParticipantsMap from '../maps/ParticipantsMap';
 import {CollectibleOverlay} from "@/components/collectible/CollectibleOverlay.tsx";
 import { useAuthStore } from '@/store/authStore';
+import { collectiblesService } from '@/services/collectibles';
 import toast from 'react-hot-toast';
 
 
@@ -28,8 +29,12 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     const [showMap, setShowMap] = useState(false);
     const [activeCollectible, setActiveCollectible] = useState<any | null>(null);
     const [showCollectible, setShowCollectible] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const user = useAuthStore((state) => state.user);
     const wsRef = useRef<WebSocket | null>(null);
+
+    // Check if current user is the event host/creator
+    const isHost = user?.id === event.creator_id;
 
     // WebSocket listener for real-time collectible drops
     useEffect(() => {
@@ -155,6 +160,22 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
         // CollectibleOverlay already handled the claim, just close the modal
         console.log("✅ Coleccionable reclamado, cerrando overlay...");
         setShowCollectible(false);
+    };
+
+    // Generate collectible (host only)
+    const handleGenerateCollectible = async () => {
+        if (!isHost || !event?.id) return;
+
+        setIsGenerating(true);
+        try {
+            await collectiblesService.generate(event.id);
+            toast.success('🎁 ¡Coleccionable generado! Todos los participantes pueden verlo.');
+        } catch (err) {
+            console.error('Error generating collectible:', err);
+            toast.error('Error al generar el coleccionable');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
 
@@ -296,8 +317,26 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
                         </button>
                     </div>
 
-                    {/* Right: Map and Transcription toggles */}
+                    {/* Right: Host controls + Map and Transcription toggles */}
                     <div className="flex items-center space-x-2">
+                        {/* Generate Collectible button - Host only */}
+                        {isHost && (
+                            <button
+                                onClick={handleGenerateCollectible}
+                                disabled={isGenerating}
+                                className={`p-3 rounded-full transition flex items-center space-x-2 ${
+                                    isGenerating
+                                        ? 'bg-yellow-800 cursor-not-allowed'
+                                        : 'bg-yellow-600 hover:bg-yellow-500'
+                                }`}
+                                title="Generar Coleccionable"
+                            >
+                                <Gift className={`w-5 h-5 text-white ${isGenerating ? 'animate-pulse' : ''}`}/>
+                                <span className="text-white text-sm font-medium hidden sm:inline">
+                                    {isGenerating ? 'Generando...' : 'Generar'}
+                                </span>
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowMap(!showMap)}
                             className={`p-3 rounded-full transition ${
