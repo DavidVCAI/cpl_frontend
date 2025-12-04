@@ -30,78 +30,49 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
     const [showCollectible, setShowCollectible] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const user = useAuthStore((state) => state.user);
-    const wsRef = useRef<WebSocket | null>(null);
 
     // Check if current user is the event host/creator
     const isHost = user?.id === event.creator_id;
 
-    // WebSocket listener for real-time collectible drops
+    // Poll for active collectibles (WebSocket doesn't work from HTTPS to ws://)
     useEffect(() => {
-        if (!user?.id || !event?.id) return;
+        if (!event?.id) return;
 
-        // Use direct backend connection for WebSocket (load balancers don't support sticky WS well)
-        const WS_URL = import.meta.env.VITE_WS_URL || 'ws://3.12.148.60:8000';
-        const ws = new WebSocket(`${WS_URL}/ws/${user.id}`);
+        const API_URL = import.meta.env.VITE_API_URL || 'https://45s1q4h2bj.execute-api.us-east-2.amazonaws.com';
+        let lastCollectibleId: string | null = null;
 
-        ws.onopen = () => {
-            console.log('✅ WebSocket connected, joining event:', event.id);
-            // Join the event to receive collectible broadcasts
-            ws.send(JSON.stringify({
-                type: 'join_event',
-                event_id: event.id
-            }));
-        };
-
-        ws.onmessage = (event) => {
+        const checkForCollectibles = async () => {
             try {
-                const message = JSON.parse(event.data);
+                const response = await fetch(`${API_URL}/api/collectibles/active/${event.id}`);
+                const collectibles = await response.json();
 
-                // Collectible dropped - show to ALL users in the event
-                if (message.type === 'collectible_drop' && message.collectible) {
-                    console.log('🎁 New collectible dropped:', message.collectible);
-
-                    // Transform backend format to frontend format
-                    const frontendCollectible = {
-                        id: message.collectible._id,
-                        name: message.collectible.name,
-                        rarity: message.collectible.type,
-                        image: message.collectible.image_url,
-                        description: message.collectible.description
-                    };
-
-                    setActiveCollectible(frontendCollectible);
-                    setShowCollectible(true);
-                }
-
-                // Collectible claimed - hide for everyone
-                if (message.type === 'collectible_claimed') {
-                    console.log('📦 Collectible claimed by:', message.winner_id);
-                    if (message.winner_id === user.id) {
-                        toast.success('🎉 ¡Has reclamado el coleccionable!');
-                    } else {
-                        toast.error(`😔 ${message.winner_name || 'Otro usuario'} lo reclamó primero`);
+                if (collectibles.length > 0 && !showCollectible) {
+                    const latest = collectibles[0];
+                    // Only show if it's a new collectible
+                    if (latest._id !== lastCollectibleId) {
+                        lastCollectibleId = latest._id;
+                        const frontendCollectible = {
+                            id: latest._id,
+                            name: latest.name,
+                            rarity: latest.type,
+                            image: latest.image_url,
+                            description: latest.description
+                        };
+                        setActiveCollectible(frontendCollectible);
+                        setShowCollectible(true);
                     }
-                    setShowCollectible(false);
-                    setActiveCollectible(null);
                 }
             } catch (err) {
-                console.error('Error parsing WebSocket message:', err);
+                // Silently fail polling
             }
         };
 
-        wsRef.current = ws;
+        // Poll every 2 seconds
+        const interval = setInterval(checkForCollectibles, 2000);
+        checkForCollectibles(); // Initial check
 
-        return () => {
-            // Leave the event when component unmounts
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'leave_event',
-                    event_id: event.id
-                }));
-            }
-            ws.close();
-        };
-    }, [user?.id, event?.id]);
+        return () => clearInterval(interval);
+    }, [event?.id, showCollectible]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -162,18 +133,32 @@ function VideoRoom({roomUrl, token, userName, event, onLeave}: VideoRoomProps) {
         setShowCollectible(false);
     };
 
-    // Generate collectible (host only) - hits same backend as WebSocket
+    // Generate collectible (host only)
     const handleGenerateCollectible = async () => {
         if (!isHost || !event?.id) return;
 
         setIsGenerating(true);
         try {
-            // Call backend-1 directly to ensure broadcast reaches WebSocket connections
-            const BACKEND_URL = 'http://3.12.148.60:8000';
-            await fetch(`${BACKEND_URL}/api/collectibles/generate?event_id=${event.id}`, {
+            const API_URL = import.meta.env.VITE_API_URL || 'https://45s1q4h2bj.execute-api.us-east-2.amazonaws.com';
+            const response = await fetch(`${API_URL}/api/collectibles/generate?event_id=${event.id}`, {
                 method: 'POST',
             });
-            toast.success('🎁 ¡Coleccionable generado! Todos los participantes pueden verlo.');
+            const data = await response.json();
+
+            // Since WebSocket might not work from HTTPS, manually trigger the collectible display
+            if (data.success && data.collectible) {
+                const frontendCollectible = {
+                    id: data.collectible._id,
+                    name: data.collectible.name,
+                    rarity: data.collectible.type,
+                    image: data.collectible.image_url,
+                    description: data.collectible.description
+                };
+                setActiveCollectible(frontendCollectible);
+                setShowCollectible(true);
+            }
+
+            toast.success('🎁 ¡Coleccionable generado!');
         } catch (err) {
             console.error('Error generating collectible:', err);
             toast.error('Error al generar el coleccionable');
