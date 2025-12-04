@@ -6,7 +6,6 @@ import LiveTranscription from '../transcription/LiveTranscription';
 import ParticipantsMap from '../maps/ParticipantsMap';
 import {CollectibleOverlay} from "@/components/collectible/CollectibleOverlay.tsx";
 import { useAuthStore } from '@/store/authStore';
-import { collectiblesService } from '@/services/collectibles';
 import toast from 'react-hot-toast';
 
 
