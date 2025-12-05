@@ -24,3 +24,4 @@ jobs:
             # mandatory
             -Dsonar.projectKey=cpl182_cpl-front
             -Dsonar.organization=cpl182
+            #xd
